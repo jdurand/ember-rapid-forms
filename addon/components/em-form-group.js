@@ -59,7 +59,7 @@ export default Component.extend(HasPropertyMixin, HasPropertyValidationMixin, {
   validationIcons: alias('inputComponent.validationIcons'),
   form: alias('inputComponent.form'),
 
-  i18n: computed(function () {
+  i18n: computed(function() {
     return getOwner(this).lookup('service:i18n');
   }),
 
@@ -82,7 +82,7 @@ export default Component.extend(HasPropertyMixin, HasPropertyValidationMixin, {
     }
   }),
 
-  label: computed('inputComponent.label', function () {
+  label: computed('inputComponent.label', 'i18n.locale', function() {
     const i18n = this.get('i18n');
     const label = this.get('inputComponent.label');
 
@@ -91,13 +91,17 @@ export default Component.extend(HasPropertyMixin, HasPropertyValidationMixin, {
     } else if(isPresent(i18n)) {
       const property = this.get('property');
       const modelName = this.get('model.constructor.modelName');
+      const keys = [
+        `${modelName}.attributes.${property}`,
+        `${modelName}.${property}`,
+        property
+      ];
       let key;
 
-      if(modelName) {
-        key = `${modelName}.${property}`;
-      } else {
-        key = property;
+      do {
+        key = keys.shift();
       }
+      while(!i18n.exists(key) && keys.length > 0);
 
       if(i18n.exists(key)) {
         return i18n.t(key);

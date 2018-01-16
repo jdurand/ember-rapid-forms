@@ -2,6 +2,9 @@ import { alias, oneWay } from '@ember/object/computed';
 import Mixin from '@ember/object/mixin';
 import { deprecate } from '@ember/application/deprecations';
 import { defineProperty, observer, computed } from '@ember/object';
+import { on } from '@ember/object/evented';
+import { getOwner } from '@ember/application';
+import { isEmpty, isPresent } from '@ember/utils';
 import HasIdMixin from './has-id';
 import HasPropertyMixin from 'ember-rapid-forms/mixins/has-property';
 import HasPropertyValidationMixin from 'ember-rapid-forms/mixins/has-property-validation';
@@ -83,6 +86,24 @@ export default Mixin.create(HasPropertyMixin, HasPropertyValidationMixin, HasIdM
   hideValidationsOnFormChange: observer('form', 'form.model', function() {
     this.set('canShowErrors', false);
   }),
+
+  i18n: computed(function() {
+    return getOwner(this).lookup('service:i18n');
+  }),
+
+  placeholderTranslation: on('init', observer('i18n.locale', function() {
+    const i18n = this.get('i18n');
+
+    if(isPresent(i18n)) {
+      const property = this.get('property');
+      const modelName = this.get('model.constructor.modelName');
+      const key = `${modelName}.placeholders.${property}`;
+
+      if(i18n.exists(key)) {
+        this.set('placeholder', i18n.t(key));
+      }
+    }
+  })),
 
   init() {
     this._super(...arguments);
