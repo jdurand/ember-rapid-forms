@@ -1,5 +1,5 @@
 import Component from '@ember/component';
-import { computed, get } from '@ember/object';
+import { computed, get, defineProperty } from '@ember/object';
 import { run } from '@ember/runloop';
 import layout from '../templates/components/em-select';
 import InputComponentMixin from '../mixins/input-component';
@@ -38,7 +38,7 @@ export default Component.extend(InputComponentMixin, {
   didInsertElement() {
     this._super(...arguments);
 
-    run.schedule('sync', this, () => {
+    run(this, () => {
       if(this.get('model.isLoading')) {
         this.get('model').on('didLoad', () => {
           this._setValue();
@@ -57,6 +57,14 @@ export default Component.extend(InputComponentMixin, {
   actions: {
     change() {
       this._setValue();
+
+      const changeAction = this.get('action');
+      const model = this.get('model');
+      const selectedID = model.get(this.get('property'));
+
+      if(model && changeAction){
+        changeAction(selectedID);
+      }
     }
   },
 
@@ -68,7 +76,7 @@ export default Component.extend(InputComponentMixin, {
     }
 
     // set it to the correct value of the selection
-    this.selectedValue = computed('model.' + this.get('property'), function() {
+    defineProperty(this, 'selectedValue', computed('model.' + this.get('property'), function() {
       const propertyIsModel = this.get('propertyIsModel');
       let value = this.get('model.' + this.get('property'));
       if(propertyIsModel && value !== null && value !== undefined) {
@@ -80,7 +88,7 @@ export default Component.extend(InputComponentMixin, {
         }
       }
       return value;
-    });
+    }));
   },
 
   _setValue() {
@@ -136,10 +144,6 @@ export default Component.extend(InputComponentMixin, {
       }
 
       model.set(this.get('property'), selectedID);
-      const changeAction = this.get('action');
-      if(changeAction){
-        changeAction(selectedID);
-      }
     }
   }
 });
