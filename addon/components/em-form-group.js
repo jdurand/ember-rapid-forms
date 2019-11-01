@@ -65,6 +65,9 @@ export default Component.extend(HasPropertyMixin, HasPropertyValidationMixin, {
 
   validationIcon: computed('status', 'shouldShowErrors', {
     get() {
+      if(this._validationIcon !== undefined){
+        return this._validationIcon;
+      }
       if (!this.get('shouldShowErrors')) {
         return;
       }
@@ -79,33 +82,44 @@ export default Component.extend(HasPropertyMixin, HasPropertyValidationMixin, {
         default:
           return null;
       }
+    },
+    set(key, value){
+      return this._validationIcon = value;
     }
   }),
 
-  label: computed('inputComponent.label', 'i18n.locale', function() {
-    const i18n = this.get('i18n');
-    const label = this.get('inputComponent.label');
-
-    if (label) {
-      return label;
-    } else if(isPresent(i18n)) {
-      const property = this.get('property');
-      const modelName = this.get('model.constructor.modelName');
-      const keys = [
-        `${modelName}.attributes.${property}`,
-        `${modelName}.${property}`,
-        property
-      ];
-      let key;
-
-      do {
-        key = keys.shift();
+  label: computed('inputComponent.label', 'i18n.locale', {
+    get(){
+      if(this._label !== undefined){
+        return this._label;
       }
-      while(!i18n.exists(key) && keys.length > 0);
+      const i18n = this.get('i18n');
+      const label = this.get('inputComponent.label');
 
-      if(i18n.exists(key)) {
-        return i18n.t(key);
+      if (label) {
+        return label;
+      } else if(isPresent(i18n)) {
+        const property = this.get('property');
+        const modelName = this.get('model.constructor.modelName');
+        const keys = [
+          `${modelName}.attributes.${property}`,
+          `${modelName}.${property}`,
+          property
+        ];
+        let key;
+
+        do {
+          key = keys.shift();
+        }
+        while(!i18n.exists(key) && keys.length > 0);
+
+        if(i18n.exists(key)) {
+          return i18n.t(key);
+        }
       }
+    },
+    set(key, value){
+      return this._label = value;
     }
   })
 });
